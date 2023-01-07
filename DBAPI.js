@@ -1,8 +1,5 @@
 const { MongoClient } = require("mongodb");
-const fs = require("fs");
-const DB_JSON = require("./connect_data.json");
-
-const uri = DB_JSON.URI;
+const uri = process?.env?.MONGO_URI || "ERROR_PROCESS_ENV_KEY_INVALID";
 
 // await api.insertOne({ JSON: "FIELDS" }, "DATABASE", "COLLECTION/TABLE");
 exports.insertOne = (obj, c_db, table) => {
@@ -10,6 +7,7 @@ exports.insertOne = (obj, c_db, table) => {
         return new Promise((resolve, reject) => {
             MongoClient.connect(uri, (err, db) => {
                 const dbo = db.db(c_db);
+                obj["documentInsertedMS"] = new Date().getTime();
 
                 dbo.collection(table).insertOne(obj, (err, res) => {
                     if (err) return err;
@@ -30,6 +28,11 @@ exports.insertMany = (arr, c_db, table) => {
         return new Promise((resolve, reject) => {
             MongoClient.connect(uri, (err, db) => {
                 const dbo = db.db(c_db);
+
+                arr = arr.map(indexOfArray => {
+                    indexOfArray["documentInsertedMS"] = new Date().getTime();
+                    return indexOfArray;
+                });
 
                 dbo.collection(table).insertMany(arr, (err, res) => {
                     if (err) return err;
@@ -95,6 +98,28 @@ exports.queryLimit = (obj_query, result_limit, c_db, table) => {
                 const dbo = db.db(c_db);
 
                 dbo.collection(table).find(obj_query).limit(result_limit).toArray((err, res) => {
+                    if (err) return err;
+                    db.close();
+
+                    resolve(res);
+                });
+
+            });
+        });
+    } catch (err) {
+        return err;
+    }
+};
+
+// await api.queryLimit({ JSON: "FIELDS" }, 10, 10, "DATABASE", "COLLECTION/TABLE");
+//                                          ^^ WILL SKIP 10 RESULTS AND RETURN NEXT 10
+exports.pagination = (obj_query, skip, max, c_db, table) => {
+    try {
+        return new Promise((resolve, reject) => {
+            MongoClient.connect(uri, (err, db) => {
+                const dbo = db.db(c_db);
+
+                dbo.collection(table).find(obj_query).skip(skip).limit(max).toArray((err, res) => {
                     if (err) return err;
                     db.close();
 
@@ -176,7 +201,15 @@ exports.updateOne = (obj_query, new_obj_values, c_db, table) => {
         return new Promise((resolve, reject) => {
             MongoClient.connect(uri, (err, db) => {
                 const dbo = db.db(c_db);
-
+                
+                if (new_obj_values["$set"]) {
+                    new_obj_values["$set"]["documentUpdatedMS"] = new Date().getTime();
+                } else {
+                    new_obj_values["$set"] = {
+                        documentUpdatedMS: new Date().getTime()
+                    }
+                }
+                
                 dbo.collection(table).updateOne(obj_query, new_obj_values, (err, res) => {
                     if (err) return err;
                     db.close();
@@ -198,6 +231,18 @@ exports.updateMany = (obj_query, new_obj_values, c_db, table) => {
             MongoClient.connect(uri, (err, db) => {
                 const dbo = db.db(c_db);
 
+                new_obj_values = new_obj_values.map(indexOfArray => {
+                    if (indexOfArray["$set"]) {
+                        indexOfArray["$set"]["documentUpdatedMS"] = new Date().getTime();
+                    } else {
+                        indexOfArray["$set"] = {
+                            documentUpdatedMS: new Date().getTime()
+                        }
+                    }
+
+                    return indexOfArray;
+                });
+
                 dbo.collection(table).updateMany(obj_query, new_obj_values, (err, res) => {
                     if (err) return err;
                     db.close();
@@ -210,5 +255,42 @@ exports.updateMany = (obj_query, new_obj_values, c_db, table) => {
         return err;
     }
 };
+
+exports.collectionCount = (c_db, table) => {
+    try {
+        return new Promise((resolve, reject) => {
+            MongoClient.connect(uri, (err, db) => {
+                const dbo = db.db(c_db);
+
+                let coll = dbo.collection(table);
+                coll.countDocuments().then((count) => {
+                    db.close();
+                    resolve(count)
+                });
+            });
+        });
+    } catch (err) {
+        return err;
+    }
+};
+
+exports.countDocuments = (c_db, table, query) => {
+    try {
+        return new Promise((resolve, reject) => {
+            MongoClient.connect(uri, (err, db) => {
+                const dbo = db.db(c_db);
+
+                let coll = dbo.collection(table);
+                coll.countDocuments(query).then((count) => {
+                    db.close();
+                    resolve(count);
+                });
+            });
+        });
+    } catch (err) {
+        return err;
+    }
+};
+
 
 module.exports;
