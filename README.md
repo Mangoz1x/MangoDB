@@ -1,6 +1,6 @@
 
-# MangoUploadPHP
-Pure PHP, MySQL uploading application.
+# MangoDB
+Easy to use mongodb library
 
 
 
