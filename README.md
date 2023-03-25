@@ -1,5 +1,5 @@
 
-# MangoDB
+# MongoDB - SIMPLE
 Easy to use mongodb library
 
 
