@@ -1,5 +1,7 @@
 const { MongoClient } = require("mongodb");
-const uri = process?.env?.MONGO_URI || "ERROR_PROCESS_ENV_KEY_INVALID";
+let uri = process?.env?.MONGO_URI || "ERROR_PROCESS_ENV_KEY_INVALID";
+
+exports.setURI = (uri) => uri = uri || null;
 
 // await api.insertOne({ JSON: "FIELDS" }, "DATABASE", "COLLECTION/TABLE");
 exports.insertOne = (obj, c_db, table) => {
