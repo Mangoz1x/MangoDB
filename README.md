@@ -72,6 +72,23 @@ Delete many items from MongoDB
 const RESPONSE = await api.deleteMany({ JSON_KEY: "/^O/" }, "DATABASE", "COLLECTION/TABLE"); 
 ```
 
+Paginate MongoDB query
+```javascript
+const RESPONSE = await api.pagination({ my_key: true }, 0, 100, "DATABASE", "COLLECTION/TABLE");
+                                                        ^ SKIP 0 DOCUMENTS
+                                                            ^ LIMIT OF 100 DOCUMENTS
+```
+
+Count documents in collection (returns how many documents are in a table)
+```javascript
+const RESPONSE = await api.collectionCount("DATABASE", "COLLECTION/TABLE");
+```
+
+Count documents based on query (returns how many documents match a query in a table)
+```javascript
+const RESPONSE = await api.countDocuments("DATABASE", "COLLECTION/TABLE", { my_key: true });
+```
+
 Update one item in MongoDB
 ```javascript
 const RESPONSE = await api.updateOne({ FIND_BY_KEY: "WHERE_VALUE_?" }, { $set: { KEY: "VALUE", KEY: "VALUE" } }, "DATABASE", "COLLECTION/TABLE");
