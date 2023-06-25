@@ -1,5 +1,30 @@
 const { MongoClient } = require("mongodb");
-let uri = process?.env?.MONGO_URI || require("../app.config.json").mongoUri;
+let uri = process?.env?.MONGO_URI;
+
+exports.createCollection = async (c_db, name, options={}) => {
+    try {
+        const client = new MongoClient(uri);
+        const dbo = client.db(c_db);
+    
+        const result = await dbo.createCollection(name, options);
+        client.close();
+        return result;
+    } catch (err) {
+        return err;
+    }
+};
+
+exports.deleteCollection = async (c_db, name, options={}) => {
+    try {
+        const client = new MongoClient(uri);
+        const dbo = client.db(c_db);
+        const result = await dbo.dropCollection(name)
+        client.close();
+        return result;
+    } catch (err) {
+        return err;
+    }
+} 
 
 // await api.insertOne({ JSON: "FIELDS" }, "DATABASE", "COLLECTION/TABLE");
 exports.insertOne = async (obj, c_db, table) => {
@@ -39,7 +64,7 @@ exports.findOne = async (obj_query, c_db, table) => {
     try {
         const client = new MongoClient(uri);
         const dbo = client.db(c_db);
-        const result = await dbo.collection(table).findOne(obj_query).toArray();
+        const result = await dbo.collection(table).findOne(obj_query);
         client.close();
         return result;
     } catch (err) {
