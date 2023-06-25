@@ -18,10 +18,7 @@ Easy to use mongodb library
 ## Usage/Examples
 Setting up the Library
 ```
-Create "connection_data.json" file in the mangodb directory
-Add a URI field to the json file and set the key to your MongoDB Application Connection Url 
-
-Save The File.
+Create a .env file in your root directory and add a variable named MONGO_URI with your connection url.
 ```
 
 Importing Module: 
