@@ -3,11 +3,11 @@ let uri = process?.env?.MONGO_URI;
 
 // GRID FS FUNCTIONS
 // await mongo.GridFSUpload("test.txt", file, "Justpix", "shipping_labels");
-exports.GridFSUpload = (filename, b64, c_db, c_table, metadata) => {
+exports.GridFSUpload = async (filename, b64, c_db, c_table, metadata) => {
     try {
         const client = new MongoClient(uri);
         const dbo = client.db(c_db);
-        
+
         const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
 
         const buffer = Buffer.from(b64, 'base64');
@@ -42,51 +42,51 @@ exports.GridFSUpload = (filename, b64, c_db, c_table, metadata) => {
 };
 
 // await mongo.GridFSRead(uploaded.id, "Justpix", "shipping_labels")
-exports.GridFSRead = (id, c_db, c_table) => {    
-        try {
-             const client = new MongoClient(uri);
-            const db = client.db(c_db);
-            
-            const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
+exports.GridFSRead = async (id, c_db, c_table) => {
+    try {
+        const client = new MongoClient(uri);
+        const db = client.db(c_db);
 
-            const transformStream = new Transform({
-                transform(chunk, encoding, callback) {
-                    this.push(chunk);
-                    callback();
-                }
+        const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
+
+        const transformStream = new Transform({
+            transform(chunk, encoding, callback) {
+                this.push(chunk);
+                callback();
+            }
+        });
+
+        let chunks = [];
+        transformStream.on('data', chunk => chunks.push(chunk));
+
+        const rstream = bucket.openDownloadStreamByName(id);
+        rstream.on("error", (error) => reject(error));
+        rstream.pipe(transformStream);
+
+        const filedata = await new Promise((resolve, reject) => {
+            transformStream.on('end', () => {
+                const base64 = Buffer.concat(chunks).toString('base64');
+                resolve(base64);
             });
 
-            let chunks = [];
-            transformStream.on('data', chunk => chunks.push(chunk));
-
-            const rstream = bucket.openDownloadStreamByName(id);
-            rstream.on("error", (error) => reject(error));
-            rstream.pipe(transformStream);
-
-            const filedata = await new Promise((resolve, reject) => {
-                transformStream.on('end', () => {
-                    const base64 = Buffer.concat(chunks).toString('base64');
-                    resolve(base64);
-                });
-
-                transformStream.on('error', (err) => {
-                    reject(err);
-                });
+            transformStream.on('error', (err) => {
+                reject(err);
             });
+        });
 
-            return filedata;
-        } catch (err) {
-            resolve({ error: err.message });
-        }
-    });
+        return filedata;
+    } catch (err) {
+        resolve({ error: err.message });
+    }
+
 };
 // GRID FS FUNCTIONS END
 
-exports.createCollection = async (c_db, name, options={}) => {
+exports.createCollection = async (c_db, name, options = {}) => {
     try {
         const client = new MongoClient(uri);
         const dbo = client.db(c_db);
-    
+
         const result = await dbo.createCollection(name, options);
         client.close();
         return result;
@@ -95,7 +95,7 @@ exports.createCollection = async (c_db, name, options={}) => {
     }
 };
 
-exports.deleteCollection = async (c_db, name, options={}) => {
+exports.deleteCollection = async (c_db, name, options = {}) => {
     try {
         const client = new MongoClient(uri);
         const dbo = client.db(c_db);
@@ -105,7 +105,7 @@ exports.deleteCollection = async (c_db, name, options={}) => {
     } catch (err) {
         return err;
     }
-} 
+}
 
 // await api.insertOne({ JSON: "FIELDS" }, "DATABASE", "COLLECTION/TABLE");
 exports.insertOne = async (obj, c_db, table) => {
@@ -306,18 +306,18 @@ exports.countDocuments = async (c_db, table, query) => {
     }
 };
 
-exports.aggregate = (obj_query, skip, max, c_db, table) => {
+exports.aggregate = async (obj_query, skip, max, c_db, table) => {
     try {
         const client = new MongoClient(uri);
         const dbo = client.db(c_db);
-            
-                
+
+
         const results = await dbo.collection(table).aggregate([
             { $match: obj_query },
             { $skip: skip },
             { $limit: max }
         ]).toArray();
-                    
+
         db.close();
         return results;
     } catch (err) {
