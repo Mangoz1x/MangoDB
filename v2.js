@@ -306,5 +306,23 @@ exports.countDocuments = async (c_db, table, query) => {
     }
 };
 
+exports.aggregate = (obj_query, skip, max, c_db, table) => {
+    try {
+        const client = new MongoClient(uri);
+        const dbo = client.db(c_db);
+            
+                
+        const results = await dbo.collection(table).aggregate([
+            { $match: obj_query },
+            { $skip: skip },
+            { $limit: max }
+        ]).toArray();
+                    
+        db.close();
+        return results;
+    } catch (err) {
+        return Promise.reject(err);
+    }
+};
 
 module.exports;
