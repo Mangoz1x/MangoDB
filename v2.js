@@ -1,6 +1,87 @@
 const { MongoClient } = require("mongodb");
 let uri = process?.env?.MONGO_URI;
 
+// GRID FS FUNCTIONS
+// await mongo.GridFSUpload("test.txt", file, "Justpix", "shipping_labels");
+exports.GridFSUpload = (filename, b64, c_db, c_table, metadata) => {
+    try {
+        const client = new MongoClient(uri);
+        const dbo = client.db(c_db);
+        
+        const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
+
+        const buffer = Buffer.from(b64, 'base64');
+        const readableStream = new Readable();
+        readableStream.push(buffer);
+        readableStream.push(null);
+
+        const custom_id = uuidv4();
+
+        const writeStream = readableStream.pipe(bucket.openUploadStream(custom_id, {
+            chunkSizeBytes: readableStream.readableLength,
+            metadata: {
+                gridfs_custom_id: custom_id,
+                name: filename,
+                ...(metadata || {})
+            }
+        }));
+
+        const file = await new Promise((resolve) => {
+            writeStream.on("close", (err, file) => {
+                resolve(err || file);
+            })
+        });
+
+        return {
+            id: custom_id,
+            file: file
+        };
+    } catch (err) {
+        return err;
+    }
+};
+
+// await mongo.GridFSRead(uploaded.id, "Justpix", "shipping_labels")
+exports.GridFSRead = (id, c_db, c_table) => {    
+        try {
+             const client = new MongoClient(uri);
+            const db = client.db(c_db);
+            
+            const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
+
+            const transformStream = new Transform({
+                transform(chunk, encoding, callback) {
+                    this.push(chunk);
+                    callback();
+                }
+            });
+
+            let chunks = [];
+            transformStream.on('data', chunk => chunks.push(chunk));
+
+            const rstream = bucket.openDownloadStreamByName(id);
+            rstream.on("error", (error) => reject(error));
+            rstream.pipe(transformStream);
+
+            const filedata = await new Promise((resolve, reject) => {
+                transformStream.on('end', () => {
+                    const base64 = Buffer.concat(chunks).toString('base64');
+                    resolve(base64);
+                });
+
+                transformStream.on('error', (err) => {
+                    reject(err);
+                });
+            });
+
+            return filedata;
+        } catch (err) {
+            resolve({ error: err.message });
+        }
+    });
+};
+// GRID FS FUNCTIONS END
+
 exports.createCollection = async (c_db, name, options={}) => {
     try {
         const client = new MongoClient(uri);
