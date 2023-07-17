@@ -1,4 +1,5 @@
 const { MongoClient } = require("mongodb");
+const Buffer = require('buffer').Buffer;
 let uri = process?.env?.MONGO_URI;
 
 // GRID FS FUNCTIONS
@@ -6,7 +7,7 @@ let uri = process?.env?.MONGO_URI;
 exports.GridFSUpload = async (filename, b64, c_db, c_table, metadata) => {
     try {
         const client = new MongoClient(uri);
-        const dbo = client.db(c_db);
+        const db = client.db(c_db);
 
         const bucket = new mongodb.GridFSBucket(db, { bucketName: c_table });
 
@@ -37,6 +38,7 @@ exports.GridFSUpload = async (filename, b64, c_db, c_table, metadata) => {
             file: file
         };
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -76,7 +78,8 @@ exports.GridFSRead = async (id, c_db, c_table) => {
 
         return filedata;
     } catch (err) {
-        resolve({ error: err.message });
+        console.log(err);
+        return { error: err.message };
     }
 
 };
@@ -91,6 +94,7 @@ exports.createCollection = async (c_db, name, options = {}) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -103,6 +107,7 @@ exports.deleteCollection = async (c_db, name, options = {}) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 }
@@ -117,6 +122,7 @@ exports.insertOne = async (obj, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -136,6 +142,7 @@ exports.insertMany = async (arr, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 }
@@ -149,6 +156,7 @@ exports.findOne = async (obj_query, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -162,6 +170,7 @@ exports.query = async (obj_query, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -176,6 +185,7 @@ exports.queryLimit = async (obj_query, result_limit, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -190,6 +200,7 @@ exports.pagination = async (obj_query, skip, max, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -203,6 +214,7 @@ exports.sort = async (obj_query, sort_obj, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -216,6 +228,7 @@ exports.deleteOne = async (obj_query, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 }
@@ -231,6 +244,7 @@ exports.deleteMany = async (obj_query, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -252,6 +266,7 @@ exports.updateOne = async (obj_query, new_obj_values, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -278,6 +293,7 @@ exports.updateMany = async (obj_query, new_obj_values, c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -290,6 +306,7 @@ exports.collectionCount = async (c_db, table) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -302,6 +319,7 @@ exports.countDocuments = async (c_db, table, query) => {
         client.close();
         return result;
     } catch (err) {
+        console.log(err);
         return err;
     }
 };
@@ -321,6 +339,7 @@ exports.aggregate = async (obj_query, skip, max, c_db, table) => {
         db.close();
         return results;
     } catch (err) {
+        console.log(err);
         return Promise.reject(err);
     }
 };
